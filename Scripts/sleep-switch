@@ -1,0 +1,84 @@
+#!/usr/bin/env zsh
+set -euo pipefail
+
+usage() {
+  cat <<'USAGE'
+Usage: sleep-switch <command>
+
+Commands:
+  status        Show whether lid-closed sleep is blocked
+  block, on     Block sleep with pmset disablesleep 1
+  normal, off   Restore normal sleep with pmset disablesleep 0
+  toggle        Flip between blocked and normal sleep
+USAGE
+}
+
+current_value() {
+  /usr/bin/pmset -g | /usr/bin/awk '
+    tolower($1) == "sleepdisabled" || tolower($1) == "disablesleep" {
+      print $2
+      found = 1
+      exit
+    }
+    END {
+      if (!found) {
+        exit 1
+      }
+    }
+  '
+}
+
+set_value() {
+  if /usr/bin/sudo -n /usr/bin/pmset -a disablesleep "$1" 2>/dev/null; then
+    return
+  fi
+
+  printf 'Passwordless SleepSwitch rule is not installed yet; falling back to sudo prompt.\n' >&2
+  /usr/bin/sudo /usr/bin/pmset -a disablesleep "$1"
+}
+
+print_status() {
+  local value
+  if ! value="$(current_value)"; then
+    printf 'SleepSwitch: unknown (pmset -g did not report SleepDisabled)\n' >&2
+    return 1
+  fi
+
+  if [[ "$value" == "1" ]]; then
+    printf 'SleepSwitch: blocked (SleepDisabled 1)\n'
+  else
+    printf 'SleepSwitch: normal (SleepDisabled %s)\n' "$value"
+  fi
+}
+
+command="${1:-}"
+
+case "$command" in
+  status)
+    print_status
+    ;;
+  block|on)
+    set_value 1
+    print_status
+    ;;
+  normal|off)
+    set_value 0
+    print_status
+    ;;
+  toggle)
+    value="$(current_value)"
+    if [[ "$value" == "1" ]]; then
+      set_value 0
+    else
+      set_value 1
+    fi
+    print_status
+    ;;
+  -h|--help|help|"")
+    usage
+    ;;
+  *)
+    usage >&2
+    exit 2
+    ;;
+esac
