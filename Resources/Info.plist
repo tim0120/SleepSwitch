@@ -7,22 +7,24 @@
 	<key>CFBundleExecutable</key>
 	<string>SleepSwitch</string>
 	<key>CFBundleIdentifier</key>
-	<string>local.tim.SleepSwitch</string>
+	<string>io.github.tim0120.SleepSwitch</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
 	<string>SleepSwitch</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.1.0</string>
+	<string>0.2.0</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>2</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>14.0</string>
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>Personal utility.</string>
+	<string>Copyright © 2026 Timothy Kostolansky. MIT license.</string>
 </dict>
 </plist>

@@ -1,0 +1,51 @@
+SleepSwitch — macOS menu bar sleep switch
+https://github.com/tim0120/SleepSwitch
+
+REQUIREMENTS
+macOS 14 Sonoma or later, Apple Silicon or Intel.
+
+INSTALL
+1. Drag SleepSwitch.app into Applications (or your personal Applications folder).
+2. Open SleepSwitch. It appears as a moon icon in the menu bar, without a Dock icon.
+3. Click Block Sleep to disable system sleep, including lid-triggered sleep on
+   supported Macs. Click Restore Normal Sleep to allow sleep again.
+   Control-Option-Command-S is the global keyboard shortcut.
+
+The release page states whether the download is Developer ID signed and notarized.
+For an unnotarized download, macOS may block the first launch. If you trust this
+release, try opening the app, then use System Settings > Privacy & Security >
+Open Anyway. See Apple's guidance: https://support.apple.com/en-us/102445
+
+POWER SETTING
+SleepSwitch changes pmset's system-wide disablesleep setting, on battery and AC
+power. The setting stays active after quitting, logging out, or restarting.
+Restore Normal Sleep before putting a MacBook in a bag. Blocking sleep can drain
+the battery and cause heat buildup; hardware and macOS behavior can vary.
+This is a system sleep switch; it does not separately keep the display lit.
+
+Administrator authentication is required to change the setting. No Accessibility
+permission, account, network connection, or subscription is needed by SleepSwitch.
+
+RESTORE SLEEP WITHOUT THE APP
+Open Terminal and run:
+  sudo /usr/bin/pmset -a disablesleep 0
+
+OPTIONAL EXTRAS
+The Extras folder contains scripts for advanced users. Run them from Terminal:
+  ./Extras/install-passwordless-toggle.sh
+  ./Extras/install-launch-agent.sh /Applications/SleepSwitch.app
+
+The passwordless script asks for administrator approval once and permits only
+the two exact pmset sleep-toggle commands for your current macOS user. Any
+process running as that user can then invoke those two commands without a prompt.
+This optional rule applies to one user; installing it again replaces the rule.
+
+Remove optional setup with:
+  ./Extras/uninstall-launch-agent.sh
+  ./Extras/uninstall-passwordless-toggle.sh
+
+UNINSTALL
+Restore Normal Sleep, remove any optional setup above, quit SleepSwitch, and
+move SleepSwitch.app to Trash. Deleting or quitting the app does not restore sleep.
+
+Free and open source under the MIT license. See LICENSE.txt.

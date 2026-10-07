@@ -1,13 +1,12 @@
-#!/usr/bin/env zsh
+#!/bin/bash
 set -euo pipefail
 
-LABEL="local.tim.SleepSwitch"
-PLIST_PATH="/Users/tim/Library/LaunchAgents/${LABEL}.plist"
 USER_DOMAIN="gui/$(/usr/bin/id -u)"
-
-if /bin/launchctl print "${USER_DOMAIN}/${LABEL}" >/dev/null 2>&1; then
-  /bin/launchctl bootout "$USER_DOMAIN" "$PLIST_PATH" >/dev/null 2>&1 || true
-fi
-
-/bin/rm -f "$PLIST_PATH"
-printf 'Removed %s\n' "$PLIST_PATH"
+for label in io.github.tim0120.SleepSwitch local.tim.SleepSwitch; do
+  if /bin/launchctl print "${USER_DOMAIN}/${label}" >/dev/null 2>&1; then
+    /bin/launchctl bootout "${USER_DOMAIN}/${label}"
+  fi
+  plist_path="$HOME/Library/LaunchAgents/${label}.plist"
+  rm -f "$plist_path"
+  printf 'Removed %s\n' "$plist_path"
+done

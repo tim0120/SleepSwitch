@@ -6,7 +6,7 @@ usage() {
 Usage: sleep-switch <command>
 
 Commands:
-  status        Show whether lid-closed sleep is blocked
+  status        Show whether system sleep is blocked
   block, on     Block sleep with pmset disablesleep 1
   normal, off   Restore normal sleep with pmset disablesleep 0
   toggle        Flip between blocked and normal sleep
@@ -16,6 +16,7 @@ USAGE
 current_value() {
   /usr/bin/pmset -g | /usr/bin/awk '
     tolower($1) == "sleepdisabled" || tolower($1) == "disablesleep" {
+      if ($2 != "0" && $2 != "1") { exit 1 }
       print $2
       found = 1
       exit
@@ -40,7 +41,7 @@ set_value() {
 print_status() {
   local value
   if ! value="$(current_value)"; then
-    printf 'SleepSwitch: unknown (pmset -g did not report SleepDisabled)\n' >&2
+    printf 'SleepSwitch: unknown (pmset -g did not report a valid SleepDisabled setting)\n' >&2
     return 1
   fi
 

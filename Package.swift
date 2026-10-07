@@ -7,8 +7,10 @@ let package = Package(
         .macOS(.v14)
     ],
     targets: [
+        .target(name: "SleepSwitchCore"),
         .executableTarget(
             name: "SleepSwitch",
+            dependencies: ["SleepSwitchCore"],
             path: "Sources/SleepSwitch"
         )
     ]

@@ -1,30 +1,7 @@
 import AppKit
 import Carbon
 import Foundation
-
-private enum SleepStatus: Equatable {
-    case blocked
-    case normal
-    case unknown(String)
-
-    var isBlocked: Bool {
-        if case .blocked = self {
-            return true
-        }
-        return false
-    }
-
-    var menuTitle: String {
-        switch self {
-        case .blocked:
-            return "Sleep is blocked"
-        case .normal:
-            return "Sleep is normal"
-        case .unknown:
-            return "Sleep status unknown"
-        }
-    }
-}
+import SleepSwitchCore
 
 private enum PowerChangeResult {
     case success
@@ -47,9 +24,8 @@ private enum Shell {
         process.standardError = pipe
 
         try process.run()
-        process.waitUntilExit()
-
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        process.waitUntilExit()
         let output = String(data: data, encoding: .utf8) ?? ""
         return Result(output: output, status: process.terminationStatus)
     }
@@ -63,7 +39,7 @@ private final class SleepPowerController {
                 return .unknown(result.output.trimmingCharacters(in: .whitespacesAndNewlines))
             }
 
-            return parseStatus(from: result.output)
+            return SleepStatus.parse(result.output)
         } catch {
             return .unknown(error.localizedDescription)
         }
@@ -98,20 +74,6 @@ private final class SleepPowerController {
         } catch {
             return Shell.Result(output: error.localizedDescription, status: 1)
         }
-    }
-
-    private func parseStatus(from output: String) -> SleepStatus {
-        for line in output.components(separatedBy: .newlines) {
-            let fields = line.split(whereSeparator: { $0 == " " || $0 == "\t" })
-            guard fields.count >= 2 else { continue }
-
-            let key = fields[0].lowercased()
-            if key == "sleepdisabled" || key == "disablesleep" {
-                return fields[1] == "1" ? .blocked : .normal
-            }
-        }
-
-        return .unknown("pmset output did not include SleepDisabled.")
     }
 
     private func escapeForAppleScript(_ text: String) -> String {
@@ -162,6 +124,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate
 
         toggleMenuItem.target = self
         toggleMenuItem.keyEquivalentModifierMask = [.control, .option, .command]
+        menu.autoenablesItems = false
 
         // Status refreshes automatically in menuWillOpen, so no manual
         // refresh item; utility shortcuts stay out of the status menu.
@@ -170,6 +133,9 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate
         menu.addItem(.separator())
         menu.addItem(toggleMenuItem)
         menu.addItem(.separator())
+        let aboutItem = NSMenuItem(title: "About SleepSwitch", action: #selector(showAbout), keyEquivalent: "")
+        aboutItem.target = self
+        menu.addItem(aboutItem)
         menu.addItem(NSMenuItem(title: "Quit SleepSwitch", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
 
         statusItem.menu = menu
@@ -186,6 +152,11 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate
 
         let currentStatus = controller.readStatus()
         lastStatus = currentStatus
+        if case .unknown(let message) = currentStatus {
+            renderStatus()
+            showAlert(title: "Sleep status unavailable", body: message)
+            return
+        }
         let shouldBlock = !currentStatus.isBlocked
 
         setChanging(true, targetBlocked: shouldBlock)
@@ -225,16 +196,28 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate
         case .blocked:
             toggleMenuItem.title = "Restore Normal Sleep"
             statusItem.button?.image = makeIcon(blocked: true, unknown: false)
-            statusItem.button?.toolTip = "Sleep blocked: close-lid sleep is disabled"
+            statusItem.button?.toolTip = "Sleep blocked system-wide; the setting persists after quitting"
         case .normal:
             toggleMenuItem.title = "Block Sleep"
             statusItem.button?.image = makeIcon(blocked: false, unknown: false)
             statusItem.button?.toolTip = "Sleep normal: close-lid sleep is allowed"
         case .unknown(let message):
-            toggleMenuItem.title = "Try Toggle Sleep Blocker"
+            toggleMenuItem.title = "Sleep Status Unavailable"
             statusItem.button?.image = makeIcon(blocked: false, unknown: true)
             statusItem.button?.toolTip = "Sleep status unknown: \(message)"
         }
+        if case .unknown = lastStatus {
+            toggleMenuItem.isEnabled = false
+        } else {
+            toggleMenuItem.isEnabled = !isChanging
+        }
+    }
+
+    @objc private func showAbout() {
+        NSApp.orderFrontStandardAboutPanel(options: [
+            .credits: NSAttributedString(string: "Free and open source • MIT license\nhttps://github.com/tim0120/SleepSwitch\n\nSleepSwitch changes a system-wide power setting. Restore Normal Sleep before putting your Mac in a bag. Quitting the app does not restore sleep.")
+        ])
+        NSApp.activate(ignoringOtherApps: true)
     }
 
     private func registerHotKey() {
@@ -326,7 +309,19 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate
     }
 }
 
-let app = NSApplication.shared
-private let delegate = AppDelegate()
-app.delegate = delegate
-app.run()
+// Read-only diagnostics for build/release checks; never change power settings.
+if CommandLine.arguments.contains("--status") {
+    let status = SleepPowerController().readStatus()
+    print(status.menuTitle)
+    if case .unknown(let message) = status {
+        fputs("\(message)\n", stderr)
+        exit(1)
+    }
+} else {
+    let app = NSApplication.shared
+    let delegate = AppDelegate()
+    app.delegate = delegate
+    withExtendedLifetime(delegate) {
+        app.run()
+    }
+}

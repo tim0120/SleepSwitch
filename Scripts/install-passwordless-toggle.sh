@@ -2,6 +2,10 @@
 set -euo pipefail
 
 USER_NAME="$(/usr/bin/id -un)"
+if [[ ! "$USER_NAME" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+  printf 'This optional helper does not support this account name. Use the default admin prompt.\n' >&2
+  exit 1
+fi
 RULE_PATH="/etc/sudoers.d/sleepswitch"
 TMP_RULE="$(/usr/bin/mktemp "${TMPDIR:-/tmp}/sleepswitch-sudoers.XXXXXX")"
 
@@ -11,7 +15,7 @@ cleanup() {
 trap cleanup EXIT
 
 cat > "$TMP_RULE" <<EOF
-# SleepSwitch: allow ${USER_NAME} to toggle only lid-closed sleep without a password.
+# SleepSwitch: allow ${USER_NAME} to toggle only system sleep without a password.
 ${USER_NAME} ALL=(root) NOPASSWD: /usr/bin/pmset -a disablesleep 0, /usr/bin/pmset -a disablesleep 1
 EOF
 
@@ -34,5 +38,6 @@ ESCAPED_COMMAND="${ESCAPED_COMMAND//\"/\\\"}"
 
 printf 'Installed %s\n' "$RULE_PATH"
 printf 'Testing passwordless pmset access...\n'
-/usr/bin/sudo -n /usr/bin/pmset -a disablesleep "$(/usr/bin/pmset -g | /usr/bin/awk 'tolower($1) == "sleepdisabled" { print $2; exit }')"
+/usr/bin/sudo -n -l /usr/bin/pmset -a disablesleep 0 >/dev/null
+/usr/bin/sudo -n -l /usr/bin/pmset -a disablesleep 1 >/dev/null
 printf 'SleepSwitch can now toggle without asking for your password.\n'

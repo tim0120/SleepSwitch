@@ -1,0 +1,40 @@
+name: Build and package
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Test sleep status parsing
+        run: ./Scripts/test.sh
+      - name: Check script syntax
+        run: |
+          for script in Scripts/*.sh; do
+            case "$script" in
+              *passwordless*) zsh -n "$script" ;;
+              *) bash -n "$script" ;;
+            esac
+          done
+          zsh -n Scripts/sleep-switch
+      - name: Build universal release packages
+        run: ./Scripts/package-release.sh
+      - name: Verify app and read status
+        run: |
+          lipo -verify_arch arm64 x86_64 build/SleepSwitch.app/Contents/MacOS/SleepSwitch
+          codesign --verify --strict --verbose=2 build/SleepSwitch.app
+          build/SleepSwitch.app/Contents/MacOS/SleepSwitch --status
+          hdiutil verify dist/*.dmg
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: SleepSwitch-universal
+          path: dist/
+          if-no-files-found: error
