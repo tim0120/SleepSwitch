@@ -14,7 +14,7 @@ ditto "$ROOT_DIR/build/SleepSwitch.app" "$STAGE_DIR/SleepSwitch.app"
 cp "$ROOT_DIR/LICENSE" "$STAGE_DIR/LICENSE.txt"
 cp "$ROOT_DIR/Docs/INSTALL.txt" "$STAGE_DIR/INSTALL.txt"
 cp "$ROOT_DIR/Scripts/"{sleep-switch,install-passwordless-toggle.sh,uninstall-passwordless-toggle.sh,install-launch-agent.sh,uninstall-launch-agent.sh} "$STAGE_DIR/Extras/"
-# Remove local Finder/provenance metadata before signing tickets or packaging.
+# Discard optional local metadata before adding notarization tickets.
 xattr -cr "$STAGE_DIR"
 
 if [[ -n "${SLEEPSWITCH_NOTARY_PROFILE:-}" ]]; then
@@ -32,7 +32,15 @@ fi
 
 codesign --verify --strict --verbose=2 "$STAGE_DIR/SleepSwitch.app"
 rm -f "$DIST_DIR/$PACKAGE_NAME.zip" "$DIST_DIR/$PACKAGE_NAME.dmg"
-ditto -c -k --keepParent "$STAGE_DIR" "$DIST_DIR/$PACKAGE_NAME.zip"
+ditto -c -k --norsrc --noextattr --keepParent "$STAGE_DIR" "$DIST_DIR/$PACKAGE_NAME.zip"
+# Verify the actual archived app, including its stapled ticket when notarized.
+VERIFY_DIR="$ROOT_DIR/build/verify-release"
+rm -rf "$VERIFY_DIR"
+ditto -x -k "$DIST_DIR/$PACKAGE_NAME.zip" "$VERIFY_DIR"
+codesign --verify --strict --verbose=2 "$VERIFY_DIR/$PACKAGE_NAME/SleepSwitch.app"
+if [[ -n "${SLEEPSWITCH_NOTARY_PROFILE:-}" ]]; then
+  xcrun stapler validate "$VERIFY_DIR/$PACKAGE_NAME/SleepSwitch.app"
+fi
 ln -s /Applications "$STAGE_DIR/Applications"
 hdiutil create -volname "SleepSwitch $VERSION" -srcfolder "$STAGE_DIR" \
   -format UDZO -ov "$DIST_DIR/$PACKAGE_NAME.dmg"
