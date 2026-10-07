@@ -29,9 +29,8 @@ See [Apple's Developer ID guidance](https://developer.apple.com/developer-id/) a
 
 ## Icon
 
-The checked-in icon is generated from native AppKit drawing code:
+The app icon and menu bar icon use the same vector drawing in `Sources/SleepSwitchIcon/SleepSwitchIcon.swift`. Regenerate the checked-in app icon and README PNG after changing that source:
 
 ```sh
-xcrun swift Scripts/generate-icon.swift
-iconutil -c icns build/AppIcon.iconset -o Resources/AppIcon.icns
+./Scripts/generate-icon.sh
 ```

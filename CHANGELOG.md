@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1 — 2026-10-07
+
+- Standardized the app, repository, and menu bar icons using one shared vector mark.
+- Replaced overlapping moon outlines with a clean crescent and separated slash that remains clear at small sizes.
+
 ## 0.2.0 — 2026-10-06
 
 First open-source release.

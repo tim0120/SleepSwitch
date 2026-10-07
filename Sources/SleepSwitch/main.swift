@@ -2,6 +2,7 @@ import AppKit
 import Carbon
 import Foundation
 import SleepSwitchCore
+import SleepSwitchIcon
 
 private enum PowerChangeResult {
     case success
@@ -257,48 +258,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate
     }
 
     private func makeIcon(blocked: Bool, unknown: Bool) -> NSImage {
-        let image = NSImage(size: NSSize(width: 18, height: 18), flipped: false) { rect in
-            let bounds = rect.insetBy(dx: 2.5, dy: 2.5)
-            let color = NSColor.labelColor
-            color.setStroke()
-            color.setFill()
-
-            let moonPath = NSBezierPath()
-            moonPath.appendArc(
-                withCenter: CGPoint(x: bounds.midX + 1.8, y: bounds.midY + 0.5),
-                radius: 5.7,
-                startAngle: 72,
-                endAngle: 288,
-                clockwise: false
-            )
-            moonPath.appendArc(
-                withCenter: CGPoint(x: bounds.midX + 4.4, y: bounds.midY + 1.1),
-                radius: 5.2,
-                startAngle: 250,
-                endAngle: 105,
-                clockwise: true
-            )
-            moonPath.close()
-            moonPath.lineWidth = 1.4
-            moonPath.stroke()
-
-            if blocked {
-                let slash = NSBezierPath()
-                slash.move(to: CGPoint(x: bounds.minX + 1.0, y: bounds.minY + 1.0))
-                slash.line(to: CGPoint(x: bounds.maxX - 1.0, y: bounds.maxY - 1.0))
-                slash.lineWidth = 2.0
-                slash.stroke()
-            }
-
-            if unknown {
-                let dotRect = CGRect(x: bounds.maxX - 2.6, y: bounds.minY, width: 2.3, height: 2.3)
-                NSBezierPath(ovalIn: dotRect).fill()
-            }
-
-            return true
-        }
-        image.isTemplate = true
-        return image
+        SleepSwitchIcon.image(size: 18, blocked: blocked, unknown: unknown)
     }
 
     private static weak var current: AppDelegate?

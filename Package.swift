@@ -8,9 +8,10 @@ let package = Package(
     ],
     targets: [
         .target(name: "SleepSwitchCore"),
+        .target(name: "SleepSwitchIcon"),
         .executableTarget(
             name: "SleepSwitch",
-            dependencies: ["SleepSwitchCore"],
+            dependencies: ["SleepSwitchCore", "SleepSwitchIcon"],
             path: "Sources/SleepSwitch"
         )
     ]
