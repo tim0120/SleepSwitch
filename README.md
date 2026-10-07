@@ -38,7 +38,9 @@ SleepSwitch invokes only these power-setting commands:
 /usr/bin/pmset -a disablesleep 0  # Restore normal sleep
 ```
 
-`-a` applies the setting on battery and AC power. It reads state using `pmset -g`. The app does not automatically undo the setting when it quits. To restore sleep without the app:
+`-a` applies the setting on battery and AC power. It reads state using `pmset -g`. macOS omits `SleepDisabled` when no override has been saved; readable live settings without that override indicate the default, normal sleep. This follows Apple's [pmset implementation](https://github.com/apple-oss-distributions/PowerManagement/blob/main/pmset/pmset.m) and [power-setting implementation](https://github.com/apple-oss-distributions/PowerManagement/blob/main/pmconfigd/PMSettings.m).
+
+The app does not automatically undo the setting when it quits. To restore sleep without the app:
 
 ```sh
 sudo /usr/bin/pmset -a disablesleep 0

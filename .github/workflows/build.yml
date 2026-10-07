@@ -31,7 +31,16 @@ jobs:
         run: |
           lipo build/SleepSwitch.app/Contents/MacOS/SleepSwitch -verify_arch arm64 x86_64
           codesign --verify --strict --verbose=2 build/SleepSwitch.app
-          build/SleepSwitch.app/Contents/MacOS/SleepSwitch --status
+          if status_output="$(build/SleepSwitch.app/Contents/MacOS/SleepSwitch --status 2>&1)"; then
+            printf '%s\n' "$status_output"
+          else
+            status_code=$?
+            printf '%s\n' "$status_output"
+            # A VM may expose no live power settings. Unknown is a valid, tested
+            # result; crashes or other failures must still fail the build.
+            test "$status_code" -eq 1
+            [[ "$status_output" == *"Sleep status unknown"* ]]
+          fi
           hdiutil verify dist/*.dmg
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:

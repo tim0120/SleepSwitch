@@ -7,8 +7,12 @@ let cases: [(String, SleepStatus, String)] = [
     ("System-wide power settings:\n SleepDisabled 0\nCurrently in use:\n sleep 0\n", .normal, "zero idle sleep timer does not mean system sleep is blocked"),
     ("\tdisablesleep\t1\r\n", .blocked, "alternate setting key and CRLF"),
     (" SLEEPDISABLED   0 ", .normal, "case and whitespace"),
+    ("Currently in use:\n standby 1\n sleep 20\n displaysleep 10\n", .normal, "fresh macOS defaults without a saved system override"),
+    ("Currently in use:\n sleep 0 (sleep prevented by another app)\n", .normal, "an idle-sleep assertion does not enable the system switch"),
+    ("Currently in use:\n", .unknown("pmset output did not include SleepDisabled."), "truncated live settings are not defaults"),
     ("sleep 0", .unknown("pmset output did not include SleepDisabled."), "missing system setting"),
     ("SleepDisabled 2", .unknown("pmset reported an unexpected sleep value: 2."), "invalid value cannot imply normal sleep"),
+    ("Currently in use:\n sleep 20\n SleepDisabled 2\n", .unknown("pmset reported an unexpected sleep value: 2."), "invalid explicit override takes priority over defaults"),
     ("SleepDisabled", .unknown("pmset reported a sleep setting without a value."), "truncated output"),
     ("", .unknown("pmset output did not include SleepDisabled."), "empty output")
 ]
