@@ -29,7 +29,7 @@ jobs:
         run: ./Scripts/package-release.sh
       - name: Verify app and read status
         run: |
-          lipo -verify_arch arm64 x86_64 build/SleepSwitch.app/Contents/MacOS/SleepSwitch
+          lipo build/SleepSwitch.app/Contents/MacOS/SleepSwitch -verify_arch arm64 x86_64
           codesign --verify --strict --verbose=2 build/SleepSwitch.app
           build/SleepSwitch.app/Contents/MacOS/SleepSwitch --status
           hdiutil verify dist/*.dmg

@@ -7,7 +7,8 @@ if [[ ! "$USER_NAME" =~ ^[a-zA-Z0-9._-]+$ ]]; then
   exit 1
 fi
 RULE_PATH="/etc/sudoers.d/sleepswitch"
-TMP_RULE="$(/usr/bin/mktemp "${TMPDIR:-/tmp}/sleepswitch-sudoers.XXXXXX")"
+# A fixed directory keeps environment-provided paths out of the privileged shell.
+TMP_RULE="$(/usr/bin/mktemp /private/tmp/sleepswitch-sudoers.XXXXXX)"
 
 cleanup() {
   /bin/rm -f "$TMP_RULE"
