@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.2 — 2026-10-07
+
+- Centered the crescent itself across the app, repository, and menu bar icons.
+- Kept the moon in the same position when switching sleep states.
+
 ## 0.2.1 — 2026-10-07
 
 - Standardized the app, repository, and menu bar icons using one shared vector mark.

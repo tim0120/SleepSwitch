@@ -24,9 +24,11 @@ public enum SleepSwitchIcon {
             let radius: CGFloat = 35
             let angle = acos(10 / radius)
             let moon = CGMutablePath()
-            moon.addArc(center: CGPoint(x: 53, y: 50), radius: radius,
+            // Center the crescent's visible bounds, not the circle it comes from.
+            // Its horizontal bounds are 27.5...72.5 in every sleep state.
+            moon.addArc(center: CGPoint(x: 62.5, y: 50), radius: radius,
                         startAngle: angle, endAngle: 2 * .pi - angle, clockwise: false)
-            moon.addArc(center: CGPoint(x: 73, y: 50), radius: radius,
+            moon.addArc(center: CGPoint(x: 82.5, y: 50), radius: radius,
                         startAngle: .pi + angle, endAngle: .pi - angle, clockwise: true)
             moon.closeSubpath()
 
@@ -45,9 +47,6 @@ public enum SleepSwitchIcon {
                 clip.addPath(cutout)
                 context.addPath(clip)
                 context.clip(using: .evenOdd)
-            } else {
-                // Optically center the bare crescent when the slash is absent.
-                context.translateBy(x: 9.5, y: 0)
             }
             context.addPath(moon)
             context.fillPath()
