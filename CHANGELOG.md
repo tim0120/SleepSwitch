@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `sleep-switch toggle` now explains why it refuses to toggle when the sleep status is unavailable, instead of exiting silently.
+
 ## 0.2.2 — 2026-10-07
 
 - Centered the crescent itself across the app, repository, and menu bar icons.
