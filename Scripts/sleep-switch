@@ -70,7 +70,10 @@ case "$command" in
     print_status
     ;;
   toggle)
-    value="$(current_value)"
+    if ! value="$(current_value)"; then
+      printf 'SleepSwitch: unknown (pmset -g did not report a valid SleepDisabled setting); not toggling\n' >&2
+      exit 1
+    fi
     if [[ "$value" == "1" ]]; then
       set_value 0
     else
